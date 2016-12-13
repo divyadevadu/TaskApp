@@ -15,7 +15,8 @@ function ($scope, $routeParams, $http, $window, BoardService) {
             var date = new Date();
             date.setTime($scope.file.data.timestamp * 1000);
             $scope.file.data.date = date.toLocaleString();
-            $scope.file.data.filename = 'api/uploads/' + $scope.file.data.filename;
+		//'api/uploads/'
+            $scope.file.data.filename = 'uploads/' + $scope.file.data.filename;
         } else {
             $scope.file.error = true;
         }
