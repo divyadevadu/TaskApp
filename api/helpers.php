@@ -1,10 +1,8 @@
 <?php
 use RedBeanPHP\R;
-// Patch for when using nginx instead of apache, source: http://php.net/manual/en/function.getallheaders.php#84262
-if (!function_exists('getallheaders')) {
-    function getallheaders() {
-        $headers = '';
 
+function getallheaders_f() {
+        $headers = '';
         foreach ($_SERVER as $name => $value) {
             if (substr($name, 0, 5) == 'HTTP_') {
                 $headers[str_replace(' ', '-', ucwords(strtolower(
@@ -12,10 +10,9 @@ if (!function_exists('getallheaders')) {
                 )))] = $value;
             }
         }
-
+	
         return $headers;
     }
-}
 
 // Log an action. If $itemId is set, it is an item action.
 function logAction($comment, $oldValue, $newValue, $itemId=null) {
@@ -50,13 +47,11 @@ function setUserToken($user, $expires) {
 // Get the user making the current request.
 function getUser() {
     global $jsonResponse;
-
-    if (isset(getallheaders()['Authorization'])) {
-        $hash = getallheaders()['Authorization'];
+    if (isset(getallheaders_f()['Authorization'])) {
+        $hash = getallheaders_f()['Authorization'];
         try {
             $payload = JWT::decode($hash, getJwtKey());
-            $user = R::load('user', $payload->uid);
-
+            $user = R::load('user', $payload->uid);	
             if ($user->id) {
                 return $user;
             }
@@ -94,9 +89,8 @@ function getLaneByID($id) {
 // Get all users.
 function getUsers($sanitize = true) {
     try {
-        $hash = getallheaders()['Authorization'];
+        $hash = getallheaders_f()['Authorization'];
         $payload = JWT::decode($hash, getJwtKey());
-
         $users = R::findAll('user');
         if ($sanitize) {
             foreach($users as &$user) {
@@ -311,8 +305,8 @@ function checkDbToken() {
     $isValid = false;
 
     if (null != $user) {
-        if (isset(getallheaders()['Authorization'])) {
-            $hash = getallheaders()['Authorization'];
+        if (isset(getallheaders_f()['Authorization'])) {
+            $hash = getallheaders_f()['Authorization'];
 
             foreach ($user->ownToken as $token) {
                 if ($hash == $token->token) {
@@ -330,13 +324,13 @@ function clearDbToken() {
     $payload = null;
 
     try {
-        $payload = JWT::decode(getallheaders()['Authorization'], getJwtKey());
+        $payload = JWT::decode(getallheaders_f()['Authorization'], getJwtKey());
     } catch (Exception $e) {}
 
     if (null != $payload) {
         $user = R::load('user', $payload->uid);
         if (0 != $user->id) {
-            $hash = getallheaders()['Authorization'];
+            $hash = getallheaders_f()['Authorization'];
 
             foreach ($user->ownToken as $token) {
                 if ($hash == $token->token) {
